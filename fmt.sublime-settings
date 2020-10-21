@@ -1,0 +1,62 @@
+{
+  /*
+  Settings per scope. Each key must be a scope such as "source.go". Each value
+  must be a dict that contains overrides for global settings such as "cmd".
+
+  Example for Go:
+
+    "scopes": {
+      "cmd": ["goimports"],
+    },
+  */
+  "scopes": {},
+
+  /*
+  Shell command to invoke, with arguments. Must be a list of strings. The
+  command must communicate over standard input/output.
+
+  This must be configured PER SCOPE in the "scopes" setting. It's listed at the
+  root level only for documentation purposes.
+  */
+  "cmd": null,
+
+  /*
+  Format current buffer on save. Enabled by default.
+
+  Note that you can format the buffer manually via the "fmt: Format Buffer"
+  command.
+  */
+  "format_on_save": true,
+
+  /*
+  Determines the CWD of the subprocess. Possible values:
+
+    - "auto"         -- try to use the current file's directory; fall back on
+      the project root, which is assumed to be the first directory in the
+      current window
+
+    - "project_root" -- use the project root, which is assumed to be the first
+      directory in the current window
+
+    - "none"         -- don't set the CWD
+
+    - ":<path>"      -- use hardcoded path; may be useful for project-specific
+      settings
+  */
+  "cwd_mode": "auto",
+
+  /*
+  Show errors from executables as popups. Disabled by default.
+  */
+  "error_messages": false,
+
+  /*
+  Determines how to replace the contents of the current buffer with the
+  formatted output. Possible values:
+
+    - "diff":    -- more complicated but better at preserving cursor position
+
+    - "replace": -- simpler but doesn't preserve cursor position
+  */
+  "merge_type": "diff",
+}
