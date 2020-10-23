@@ -41,6 +41,8 @@ The plugin has _no default formatters_. You must specify them yourself. Example 
 
 By default, this will autoformat on save (configurable). You can format manually with the `fmt: Format Buffer` command in the command palette.
 
+**How to get the scope name**. Option 1: menu → Tools → Developer → Show Scope Name. Option 2: run the `fmt_format_buffer` command, and if not configured for the current scope, it will tell you!
+
 ## Settings
 
 See [`fmt.sublime-settings`](fmt.sublime-settings) for all available settings. To override them, open:
