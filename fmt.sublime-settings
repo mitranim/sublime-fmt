@@ -31,32 +31,40 @@
   /*
   Determines the CWD of the subprocess. Possible values:
 
-    - "auto"         -- try to use the current file's directory; fall back on
+    * "auto"         -- try to use the current file's directory; fall back on
       the project root, which is assumed to be the first directory in the
       current window
 
-    - "project_root" -- use the project root, which is assumed to be the first
+    * "project_root" -- use the project root, which is assumed to be the first
       directory in the current window
 
-    - "none"         -- don't set the CWD
+    * "none"         -- don't set the CWD
 
-    - ":<path>"      -- use hardcoded path; may be useful for project-specific
+    * ":<path>"      -- use hardcoded path; may be useful for project-specific
       settings
   */
   "cwd_mode": "auto",
 
   /*
-  Show errors from executables as popups. Disabled by default.
+  How to show errors. Possible values:
+
+    * null         -- hide errors completely
+
+    * "console"    -- print errors to the Sublime console
+
+    * "panel"      -- show an output panel at the bottom
+
+    * "popup"      -- show obnoxious popup windows
   */
-  "error_messages": false,
+  "error_style": "panel",
 
   /*
   Determines how to replace the contents of the current buffer with the
   formatted output. Possible values:
 
-    - "diff":    -- more complicated but better at preserving cursor position
+    * "diff":    -- more complicated but better at preserving cursor position
 
-    - "replace": -- simpler but doesn't preserve cursor position
+    * "replace": -- simpler but doesn't preserve cursor position
   */
   "merge_type": "diff",
 }

@@ -7,10 +7,7 @@ Features:
 * Auto-format on save or on demand (configurable).
 * Configure executables and other settings per _scope_ (syntax type: `source.go`, `source.rust` and so on).
 * Preserve cursor and scroll position when formatting.
-
-Limitations:
-
-* Errors are currently reported to Sublime's console.
+* Show errors in an output panel (configurable).
 
 This is based on https://github.com/mitranim/sublime-gofmt and fully replaces it. It can also replace https://github.com/mitranim/sublime-rust-fmt, but you'll have to specify a few CLI args yourself.
 
@@ -88,6 +85,10 @@ the format command, add something like this to your `.sublime-keymap`:
 ```sublime-keymap
 {"keys": ["ctrl+super+k"], "command": "fmt_format_buffer"}
 ```
+
+## Changelog
+
+**2020-10-23**. Now supports several ways of printing errors. By default, errors are shown in a transient output panel at the bottom.
 
 ## License
 

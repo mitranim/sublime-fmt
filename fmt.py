@@ -5,9 +5,10 @@ import os
 import sys
 from . import difflib
 
-SETTINGS_KEY = 'fmt.sublime-settings'
-SETTING_OVERRIDE_KEY = 'fmt'
+PLUGIN_NAME = 'fmt'
+SETTINGS_KEY = PLUGIN_NAME + '.sublime-settings'
 IS_WINDOWS = os.name == 'nt'
+PANEL_OUTPUT_NAME = 'output.' + PLUGIN_NAME
 
 # Copied from other plugins, haven't personally tested on Windows.
 def process_startup_info():
@@ -57,7 +58,7 @@ def view_scope(view):
 
 def get_setting(view, key):
     scope = view_scope(view)
-    overrides = view.settings().get(SETTING_OVERRIDE_KEY)
+    overrides = view.settings().get(PLUGIN_NAME)
 
     (val, found) = get_in(overrides, 'scopes', scope, key)
     if found:
@@ -75,36 +76,85 @@ def get_setting(view, key):
 
     return settings.get(key)
 
-def get_cmd(view):
-    return get_setting(view, 'cmd')
-
 def is_enabled(view):
-    return bool(get_cmd(view))
+    return bool(get_setting(view, 'cmd'))
+
+def create_panel(view):
+    return view.window().create_output_panel(PLUGIN_NAME)
+
+def find_panel(view):
+    return view.window().find_output_panel(PANEL_OUTPUT_NAME)
+
+def ensure_panel(view):
+    return find_panel(view) or create_panel(view)
+
+def hide_panel(view):
+    if view.window().active_panel() == PANEL_OUTPUT_NAME:
+        view.window().run_command('hide_panel', {'panel': PANEL_OUTPUT_NAME})
+
+def show_panel(view):
+    view.window().run_command('show_panel', {'panel': PANEL_OUTPUT_NAME})
+
+def report(view, err):
+    style = get_setting(view, 'error_style')
+
+    if style == None:
+        return
+
+    if style == 'console':
+        if isinstance(err, Exception):
+            raise err
+        msg = '[{}] {}'.format(PLUGIN_NAME, err)
+        print(msg)
+        return
+
+    if style == 'panel':
+        msg = '[{}] {}'.format(PLUGIN_NAME, err)
+        ensure_panel(view).run_command('fmt_panel_replace_content', {'text': msg})
+        show_panel(view)
+        return
+
+    if style == 'popup':
+        msg = '[{}] {}'.format(PLUGIN_NAME, err)
+        sublime.error_message(msg)
+        return
+
+    sublime.error_message('[{}] unknown value of setting "error_style": {}'.format(PLUGIN_NAME, style))
 
 def merge_into_view(view, edit, new_src):
     def subview(start, end):
         return view.substr(sublime.Region(start, end))
+
     diffs = difflib.myers_diffs(subview(0, view.size()), new_src)
     difflib.cleanup_efficiency(diffs)
     merged_len = 0
+
     for (op_type, patch) in diffs:
         patch_len = len(patch)
         if op_type == difflib.Ops.EQUAL:
             if subview(merged_len, merged_len+patch_len) != patch:
-                raise Exception("[sublime-fmt] mismatch between diff's source and current content")
+                report(view, "mismatch between diff's source and current content")
+                return
             merged_len += patch_len
         elif op_type == difflib.Ops.INSERT:
             view.insert(edit, merged_len, patch)
             merged_len += patch_len
         elif op_type == difflib.Ops.DELETE:
             if subview(merged_len, merged_len+patch_len) != patch:
-                raise Exception("[sublime-fmt] mismatch between diff's source and current content")
+                report(view, "mismatch between diff's source and current content")
+                return
             view.erase(edit, sublime.Region(merged_len, merged_len+patch_len))
 
-def run_format(view, input, encoding):
-    cmd = get_cmd(view)
+def format(view, input, encoding):
+    cmd = get_setting(view, 'cmd')
+
+    if not cmd:
+        report(view, 'missing setting "cmd" for scope "{}"'.format(view_scope(view)))
+        return (None, False)
+
     if not isinstance(cmd, list):
-        raise Exception("[sublime-fmt] expected cmd to be a list, found {}".format(cmd))
+        report(view, 'expected setting "cmd" to be a list, found {}'.format(cmd))
+        return (None, False)
 
     proc = sub.Popen(
         args=cmd,
@@ -121,22 +171,19 @@ def run_format(view, input, encoding):
 
     if proc.returncode != 0:
         err = sub.CalledProcessError(proc.returncode, cmd)
-
-        if get_setting(view, 'error_messages'):
-            msg = str(err)
-            if len(stderr) > 0:
-                msg += ':\n' + stderr
-            elif len(stdout) > 0:
-                msg += ':\n' + stdout
-            msg += '\nNote: to disable error popups, set the fmt setting "error_messages" to false.'
-            sublime.error_message(msg)
-
-        raise err
+        msg = str(err)
+        if len(stderr) > 0:
+            msg += ':\n' + stderr
+        elif len(stdout) > 0:
+            msg += ':\n' + stdout
+        report(view, msg)
+        return (None, False)
 
     if len(stderr) > 0:
-        print('[sublime-fmt]:', stderr, file=sys.stderr)
+        report(view, stderr)
+        return (None, False)
 
-    return stdout
+    return (stdout, True)
 
 def view_encoding(view):
     encoding = view.encoding()
@@ -147,11 +194,13 @@ class fmt_format_buffer(sublime_plugin.TextCommand):
         view = self.view
         content = view.substr(sublime.Region(0, view.size()))
 
-        stdout = run_format(
+        (stdout, ok) = format(
             view=view,
             input=content,
             encoding=view_encoding(view),
         )
+        if not ok:
+            return
 
         merge_type = get_setting(view, 'merge_type')
 
@@ -161,14 +210,22 @@ class fmt_format_buffer(sublime_plugin.TextCommand):
         elif merge_type == 'replace':
             position = view.viewport_position()
             view.replace(edit, sublime.Region(0, view.size()), stdout)
-            # Works only on main thread, hence lambda and timer.
+            # Works only on the main thread, hence lambda and timer.
             restore = lambda: view.set_viewport_position(position, animate=False)
             sublime.set_timeout(restore, 0)
 
         else:
-            raise Exception('[sublime-fmt] unknown merge_type setting: {}'.format(merge_type))
+            report(view, 'unknown value of setting "merge_type": {}'.format(merge_type))
+            return
+
+class fmt_panel_replace_content(sublime_plugin.TextCommand):
+    def run(self, edit, text):
+        view = self.view
+        view.erase(edit, sublime.Region(0, view.size()))
+        view.insert(edit, 0, text)
 
 class fmt_listener(sublime_plugin.EventListener):
     def on_pre_save(self, view):
+        hide_panel(view)
         if is_enabled(view) and get_setting(view, 'format_on_save'):
             view.run_command('fmt_format_buffer')
