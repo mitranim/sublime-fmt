@@ -4,30 +4,51 @@ Sublime Text plugin for auto-formatting arbitrary code by calling arbitrary exec
 
 Features:
 
-* Auto-format on save or on demand (configurable).
+* Auto-format: on save and/or on demand (configurable).
 * Configure executables and other settings per _scope_ (syntax type: `source.go`, `source.rust` and so on).
 * Preserve cursor and scroll position when formatting.
 * Show errors in an output panel (configurable).
 
-This is based on https://github.com/mitranim/sublime-gofmt and fully replaces it. It can also replace https://github.com/mitranim/sublime-rust-fmt, but you'll have to specify a few CLI args yourself.
+Limitations:
+
+* Invokes a subprocess every time. Good enough for formatters written in compiled languages, such as `gofmt` and `rustfmt`. If a given formatter is written in JS and takes a second to start up, this tool might not be suitable.
+
+Based on https://github.com/mitranim/sublime-gofmt and fully replaces it. Also replaces [RustFmt](https://github.com/mitranim/sublime-rust-fmt) and countless others.
+
+## Why
+
+Why this exists?
+
+Package Control has special-case formatter plugins for different languages, and the monstrous Formatter with too many batteries included. This makes it hard to add formatters: someone has to make and publish a new plugin every time, or fork a repo and make a PR, etc.
+
+Many formatters just call a subprocess and use stdio. One plugin can handle them all, while letting the _user_ specify any new formatter for any new syntax! This works for `gofmt`, `rustfmt`, `clang-format`, and endless others.
 
 ## Installation
 
-This plugin is not on Package Control and requires manual installation.
+<!--
+### Package Control
+
+1. Get [Package Control](https://packagecontrol.io).
+2. Open command palette: ⇪⌘P or ⇪^P.
+3. `Package Control: Install Package`.
+4. `Fmt`.
+-->
+
+### Manual
 
 Clone the repo and symlink it to your Sublime packages directory. Example for MacOS:
 
 ```sh
 git clone https://github.com/mitranim/sublime-fmt.git
 cd sublime-fmt
-ln -sf "$(pwd)" "$HOME/Library/Application Support/Sublime Text 3/Packages/"
+ln -sf "$(pwd)" "$HOME/Library/Application Support/Sublime Text 3/Packages/Fmt"
 ```
 
 To find the packages directory on your system, use Sublime Text menu → Preferences → Browse Packages.
 
 ## Usage
 
-The plugin has _no default formatters_. You must specify them yourself. Example for Go:
+The plugin has _no default formatters_. You must specify them in the plugin settings. Example for Go:
 
 ```sublime-settings
 {
@@ -39,28 +60,30 @@ The plugin has _no default formatters_. You must specify them yourself. Example 
 }
 ```
 
-By default, this will autoformat on save (configurable). You can format manually with the `fmt: Format Buffer` command in the command palette.
+If you're not familiar with Sublime's concept of "scope", think of it roughly as "syntax type".
 
-**How to get the scope name**. Option 1: menu → Tools → Developer → Show Scope Name. Option 2: run the `fmt_format_buffer` command, and if not configured for the current scope, it will tell you!
+**How to get scope name**. Option 1: menu → Tools → Developer → Show Scope Name. Option 2: run the command `Fmt: Format Buffer`, and if not configured for the current scope, it will tell you!
+
+By default, this will autoformat on save (configurable). You can format manually with the `Fmt: Format Buffer` command in the command palette.
 
 ## Settings
 
-See [`fmt.sublime-settings`](fmt.sublime-settings) for all available settings. To override them, open:
+See [`Fmt.sublime-settings`](Fmt.sublime-settings) for all available settings. To override them, open:
 
 ```
-Preferences → Package Settings → fmt → Settings
+menu → Preferences → Package Settings → Fmt → Settings
 ```
 
 The plugin looks for settings in the following places, with the following priority:
 
-  * `"fmt"` dict in general Sublime settings, project-specific or global.
-  * `fmt.sublime-settings`, user-created or default.
+  * `"Fmt"` dict in general Sublime settings, project-specific or global.
+  * `Fmt.sublime-settings`, user-created or default.
 
-For overrides, open project or global settings and make a `"fmt"` entry:
+For overrides, open project or global settings and make a `"Fmt"` entry:
 
 ```sublime-settings
 {
-  "fmt": {
+  "Fmt": {
     "format_on_save": false,
     "scopes": {
       "source.some_lang": {
@@ -75,7 +98,7 @@ For overrides, open project or global settings and make a `"fmt"` entry:
 
 In Sublime's command palette:
 
-* `fmt: Format Buffer`
+* `Fmt: Format Buffer`
 
 ## Hotkeys
 

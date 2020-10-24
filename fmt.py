@@ -5,10 +5,138 @@ import os
 import sys
 from . import difflib
 
-PLUGIN_NAME = 'fmt'
+PLUGIN_NAME = 'Fmt'
 SETTINGS_KEY = PLUGIN_NAME + '.sublime-settings'
 IS_WINDOWS = os.name == 'nt'
 PANEL_OUTPUT_NAME = 'output.' + PLUGIN_NAME
+
+class fmt_listener(sublime_plugin.EventListener):
+    def on_pre_save(self, view):
+        hide_panel(view)
+        if is_enabled(view) and get_setting(view, 'format_on_save'):
+            view.run_command('fmt_format_buffer')
+
+class fmt_format_buffer(sublime_plugin.TextCommand):
+    def run(self, edit):
+        view = self.view
+        content = view.substr(sublime.Region(0, view.size()))
+
+        (output, err) = format(
+            view=view,
+            input=content,
+            encoding=view_encoding(view),
+        )
+        if err:
+            report(view, err)
+            return
+
+        merge_type = get_setting(view, 'merge_type')
+
+        if merge_type == 'diff':
+            merge_into_view(view, edit, output)
+
+        elif merge_type == 'replace':
+            position = view.viewport_position()
+            view.replace(edit, sublime.Region(0, view.size()), output)
+            # Works only on the main thread, hence lambda and timer.
+            restore = lambda: view.set_viewport_position(position, animate=False)
+            sublime.set_timeout(restore, 0)
+
+        else:
+            report(view, 'unknown value of setting "merge_type": {}'.format(merge_type))
+            return
+
+class fmt_panel_replace_content(sublime_plugin.TextCommand):
+    def run(self, edit, text):
+        view = self.view
+        view.erase(edit, sublime.Region(0, view.size()))
+        view.insert(edit, 0, text)
+
+def format(view, input, encoding):
+    cmd = get_setting(view, 'cmd')
+
+    if not cmd:
+        return (None, 'missing setting "cmd" for scope "{}"'.format(view_scope(view)))
+
+    if not isinstance(cmd, list):
+        return (None, 'expected setting "cmd" to be a list, found {}'.format(cmd))
+
+    proc = sub.Popen(
+        args=cmd,
+        stdin=sub.PIPE,
+        stdout=sub.PIPE,
+        stderr=sub.PIPE,
+        startupinfo=process_startup_info(),
+        universal_newlines=False,
+        cwd=guess_cwd(view),
+    )
+
+    (stdout, stderr) = proc.communicate(input=bytes(input, encoding=encoding))
+    (stdout, stderr) = (stdout.decode(encoding), stderr.decode(encoding))
+
+    if proc.returncode != 0:
+        err = sub.CalledProcessError(proc.returncode, cmd)
+        msg = str(err)
+        if len(stderr) > 0:
+            msg += ':\n' + stderr
+        elif len(stdout) > 0:
+            msg += ':\n' + stdout
+        return (None, msg)
+
+    if len(stderr) > 0:
+        return (None, stderr)
+
+    return (stdout, None)
+
+def merge_into_view(view, edit, new_src):
+    def subview(start, end):
+        return view.substr(sublime.Region(start, end))
+
+    diffs = difflib.myers_diffs(subview(0, view.size()), new_src)
+    difflib.cleanup_efficiency(diffs)
+    merged_len = 0
+
+    for (op_type, patch) in diffs:
+        patch_len = len(patch)
+        if op_type == difflib.Ops.EQUAL:
+            if subview(merged_len, merged_len+patch_len) != patch:
+                report(view, "mismatch between diff's source and current content")
+                return
+            merged_len += patch_len
+        elif op_type == difflib.Ops.INSERT:
+            view.insert(edit, merged_len, patch)
+            merged_len += patch_len
+        elif op_type == difflib.Ops.DELETE:
+            if subview(merged_len, merged_len+patch_len) != patch:
+                report(view, "mismatch between diff's source and current content")
+                return
+            view.erase(edit, sublime.Region(merged_len, merged_len+patch_len))
+
+def report(view, err):
+    style = get_setting(view, 'error_style')
+
+    if style == None:
+        return
+
+    if style == 'console':
+        if isinstance(err, Exception):
+            raise err
+        msg = '[{}] {}'.format(PLUGIN_NAME, err)
+        print(msg)
+        return
+
+    if style == 'panel':
+        msg = '[{}] {}'.format(PLUGIN_NAME, err)
+        ensure_panel(view).run_command('fmt_panel_replace_content', {'text': msg})
+        show_panel(view)
+        return
+
+    if style == 'popup':
+        msg = '[{}] {}'.format(PLUGIN_NAME, err)
+        sublime.error_message(msg)
+        return
+
+    sublime.error_message('[{}] unknown value of setting "error_style": {}'.format(PLUGIN_NAME, style))
 
 # Copied from other plugins, haven't personally tested on Windows.
 def process_startup_info():
@@ -79,6 +207,10 @@ def get_setting(view, key):
 def is_enabled(view):
     return bool(get_setting(view, 'cmd'))
 
+def view_encoding(view):
+    encoding = view.encoding()
+    return 'UTF-8' if encoding == 'Undefined' else encoding
+
 def create_panel(view):
     return view.window().create_output_panel(PLUGIN_NAME)
 
@@ -94,138 +226,3 @@ def hide_panel(view):
 
 def show_panel(view):
     view.window().run_command('show_panel', {'panel': PANEL_OUTPUT_NAME})
-
-def report(view, err):
-    style = get_setting(view, 'error_style')
-
-    if style == None:
-        return
-
-    if style == 'console':
-        if isinstance(err, Exception):
-            raise err
-        msg = '[{}] {}'.format(PLUGIN_NAME, err)
-        print(msg)
-        return
-
-    if style == 'panel':
-        msg = '[{}] {}'.format(PLUGIN_NAME, err)
-        ensure_panel(view).run_command('fmt_panel_replace_content', {'text': msg})
-        show_panel(view)
-        return
-
-    if style == 'popup':
-        msg = '[{}] {}'.format(PLUGIN_NAME, err)
-        sublime.error_message(msg)
-        return
-
-    sublime.error_message('[{}] unknown value of setting "error_style": {}'.format(PLUGIN_NAME, style))
-
-def merge_into_view(view, edit, new_src):
-    def subview(start, end):
-        return view.substr(sublime.Region(start, end))
-
-    diffs = difflib.myers_diffs(subview(0, view.size()), new_src)
-    difflib.cleanup_efficiency(diffs)
-    merged_len = 0
-
-    for (op_type, patch) in diffs:
-        patch_len = len(patch)
-        if op_type == difflib.Ops.EQUAL:
-            if subview(merged_len, merged_len+patch_len) != patch:
-                report(view, "mismatch between diff's source and current content")
-                return
-            merged_len += patch_len
-        elif op_type == difflib.Ops.INSERT:
-            view.insert(edit, merged_len, patch)
-            merged_len += patch_len
-        elif op_type == difflib.Ops.DELETE:
-            if subview(merged_len, merged_len+patch_len) != patch:
-                report(view, "mismatch between diff's source and current content")
-                return
-            view.erase(edit, sublime.Region(merged_len, merged_len+patch_len))
-
-def format(view, input, encoding):
-    cmd = get_setting(view, 'cmd')
-
-    if not cmd:
-        report(view, 'missing setting "cmd" for scope "{}"'.format(view_scope(view)))
-        return (None, False)
-
-    if not isinstance(cmd, list):
-        report(view, 'expected setting "cmd" to be a list, found {}'.format(cmd))
-        return (None, False)
-
-    proc = sub.Popen(
-        args=cmd,
-        stdin=sub.PIPE,
-        stdout=sub.PIPE,
-        stderr=sub.PIPE,
-        startupinfo=process_startup_info(),
-        universal_newlines=False,
-        cwd=guess_cwd(view),
-    )
-
-    (stdout, stderr) = proc.communicate(input=bytes(input, encoding=encoding))
-    (stdout, stderr) = (stdout.decode(encoding), stderr.decode(encoding))
-
-    if proc.returncode != 0:
-        err = sub.CalledProcessError(proc.returncode, cmd)
-        msg = str(err)
-        if len(stderr) > 0:
-            msg += ':\n' + stderr
-        elif len(stdout) > 0:
-            msg += ':\n' + stdout
-        report(view, msg)
-        return (None, False)
-
-    if len(stderr) > 0:
-        report(view, stderr)
-        return (None, False)
-
-    return (stdout, True)
-
-def view_encoding(view):
-    encoding = view.encoding()
-    return 'UTF-8' if encoding == 'Undefined' else encoding
-
-class fmt_format_buffer(sublime_plugin.TextCommand):
-    def run(self, edit):
-        view = self.view
-        content = view.substr(sublime.Region(0, view.size()))
-
-        (stdout, ok) = format(
-            view=view,
-            input=content,
-            encoding=view_encoding(view),
-        )
-        if not ok:
-            return
-
-        merge_type = get_setting(view, 'merge_type')
-
-        if merge_type == 'diff':
-            merge_into_view(view, edit, stdout)
-
-        elif merge_type == 'replace':
-            position = view.viewport_position()
-            view.replace(edit, sublime.Region(0, view.size()), stdout)
-            # Works only on the main thread, hence lambda and timer.
-            restore = lambda: view.set_viewport_position(position, animate=False)
-            sublime.set_timeout(restore, 0)
-
-        else:
-            report(view, 'unknown value of setting "merge_type": {}'.format(merge_type))
-            return
-
-class fmt_panel_replace_content(sublime_plugin.TextCommand):
-    def run(self, edit, text):
-        view = self.view
-        view.erase(edit, sublime.Region(0, view.size()))
-        view.insert(edit, 0, text)
-
-class fmt_listener(sublime_plugin.EventListener):
-    def on_pre_save(self, view):
-        hide_panel(view)
-        if is_enabled(view) and get_setting(view, 'format_on_save'):
-            view.run_command('fmt_format_buffer')

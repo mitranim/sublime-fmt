@@ -1,6 +1,6 @@
 [
   {
-    "caption": "fmt: Format Buffer",
+    "caption": "Fmt: Format Buffer",
     "command": "fmt_format_buffer"
   }
 ]

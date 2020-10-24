@@ -12,7 +12,7 @@
   "scopes": {},
 
   /*
-  Shell command to invoke, with arguments. Must be a list of strings. The
+  Command to invoke, with command line arguments. Must be a list of strings. The
   command must communicate over standard input/output.
 
   This must be configured PER SCOPE in the "scopes" setting. It's listed at the
@@ -23,7 +23,7 @@
   /*
   Format current buffer on save. Enabled by default.
 
-  Note that you can format the buffer manually via the "fmt: Format Buffer"
+  Note that you can format the buffer manually via the "Fmt: Format Buffer"
   command.
   */
   "format_on_save": true,
