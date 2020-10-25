@@ -6,7 +6,9 @@
   Example for Go:
 
     "scopes": {
-      "cmd": ["goimports"],
+      "scope.go": {
+        "cmd": ["goimports"],
+      },
     },
   */
   "scopes": {},
