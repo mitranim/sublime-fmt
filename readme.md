@@ -113,7 +113,9 @@ the format command, add something like this to your `.sublime-keymap`:
 
 ## Changelog
 
-**2020-10-23**. Now supports several ways of printing errors. By default, errors are shown in a transient output panel at the bottom.
+**2020-10-25**. Support subprocess timeout, always kill the subprocess.
+
+**2020-10-23**. Support several ways of printing errors. By default, errors are shown in a transient output panel at the bottom.
 
 ## License
 

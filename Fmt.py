@@ -21,12 +21,13 @@ class fmt_format_buffer(sublime_plugin.TextCommand):
         view = self.view
         content = view.substr(sublime.Region(0, view.size()))
 
-        (output, err) = format(
-            view=view,
-            input=content,
-            encoding=view_encoding(view),
-        )
-        if err:
+        try:
+            output = format(
+                view=view,
+                input=content,
+                encoding=view_encoding(view),
+            )
+        except Exception as err:
             report(view, err)
             return
 
@@ -56,10 +57,12 @@ def format(view, input, encoding):
     cmd = get_setting(view, 'cmd')
 
     if not cmd:
-        return (None, 'missing setting "cmd" for scope "{}"'.format(view_scope(view)))
+        raise Exception('missing setting "cmd" for scope "{}"'.format(view_scope(view)))
 
     if not isinstance(cmd, list):
-        return (None, 'expected setting "cmd" to be a list, found {}'.format(cmd))
+        raise Exception('expected setting "cmd" to be a list, found {}'.format(cmd))
+
+    timeout = get_setting(view, 'timeout')
 
     proc = sub.Popen(
         args=cmd,
@@ -71,7 +74,14 @@ def format(view, input, encoding):
         cwd=guess_cwd(view),
     )
 
-    (stdout, stderr) = proc.communicate(input=bytes(input, encoding=encoding))
+    try:
+        (stdout, stderr) = proc.communicate(input=bytes(input, encoding=encoding), timeout=timeout)
+    finally:
+        try:
+            proc.kill()
+        except:
+            pass
+
     (stdout, stderr) = (stdout.decode(encoding), stderr.decode(encoding))
 
     if proc.returncode != 0:
@@ -81,12 +91,12 @@ def format(view, input, encoding):
             msg += ':\n' + stderr
         elif len(stdout) > 0:
             msg += ':\n' + stdout
-        return (None, msg)
+        raise Exception(msg)
 
     if len(stderr) > 0:
-        return (None, stderr)
+        raise Exception(stderr)
 
-    return (stdout, None)
+    return stdout
 
 def merge_into_view(view, edit, new_src):
     def subview(start, end):

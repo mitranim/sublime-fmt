@@ -69,4 +69,11 @@
     * "replace": -- simpler but doesn't preserve cursor position
   */
   "merge_type": "diff",
+
+  /*
+  Subprocess timeout in seconds. If execution takes longer, Fmt kills the
+  subprocess and aborts with an error. (Technically, Fmt always kills the
+  subprocess just in case.)
+  */
+  "timeout": 60,
 }
