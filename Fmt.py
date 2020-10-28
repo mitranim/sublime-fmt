@@ -12,7 +12,7 @@ PANEL_OUTPUT_NAME = 'output.' + PLUGIN_NAME
 
 class fmt_listener(sublime_plugin.EventListener):
     def on_pre_save(self, view):
-        hide_panel(view)
+        hide_panel(view.window())
         if is_enabled(view) and get_setting(view, 'format_on_save'):
             view.run_command('fmt_format_buffer')
 
@@ -82,7 +82,8 @@ def format(view, input, encoding):
         except:
             pass
 
-    (stdout, stderr) = (stdout.decode(encoding), stderr.decode(encoding))
+    stdout = stdout.decode(encoding)
+    stderr = stderr.decode(encoding)
 
     if proc.returncode != 0:
         err = sub.CalledProcessError(proc.returncode, cmd)
@@ -123,6 +124,7 @@ def merge_into_view(view, edit, new_src):
             view.erase(edit, sublime.Region(merged_len, merged_len+patch_len))
 
 def report(view, err):
+    window = view.window()
     style = get_setting(view, 'error_style')
 
     if style == None:
@@ -137,8 +139,8 @@ def report(view, err):
 
     if style == 'panel':
         msg = '[{}] {}'.format(PLUGIN_NAME, err)
-        ensure_panel(view).run_command('fmt_panel_replace_content', {'text': msg})
-        show_panel(view)
+        ensure_panel(window).run_command('fmt_panel_replace_content', {'text': msg})
+        show_panel(window)
         return
 
     if style == 'popup':
@@ -158,6 +160,7 @@ def process_startup_info():
     return startupinfo
 
 def guess_cwd(view):
+    window = view.window()
     mode = get_setting(view, 'cwd_mode')
 
     if mode.startswith(':'):
@@ -167,15 +170,15 @@ def guess_cwd(view):
         return None
 
     if mode == 'project_root':
-        if len(view.window().folders()):
-            return view.window().folders()[0]
+        if len(window.folders()):
+            return window.folders()[0]
         return None
 
     if mode == 'auto':
         if view.file_name():
             return os.path.dirname(view.file_name())
-        elif len(view.window().folders()):
-            return view.window().folders()[0]
+        elif len(window.folders()):
+            return window.folders()[0]
 
 def get_in(val, *path):
     for key in path:
@@ -221,18 +224,18 @@ def view_encoding(view):
     encoding = view.encoding()
     return 'UTF-8' if encoding == 'Undefined' else encoding
 
-def create_panel(view):
-    return view.window().create_output_panel(PLUGIN_NAME)
+def create_panel(window):
+    return window.create_output_panel(PLUGIN_NAME)
 
-def find_panel(view):
-    return view.window().find_output_panel(PANEL_OUTPUT_NAME)
+def find_panel(window):
+    return window.find_output_panel(PANEL_OUTPUT_NAME)
 
-def ensure_panel(view):
-    return find_panel(view) or create_panel(view)
+def ensure_panel(window):
+    return find_panel(window) or create_panel(window)
 
-def hide_panel(view):
-    if view.window().active_panel() == PANEL_OUTPUT_NAME:
-        view.window().run_command('hide_panel', {'panel': PANEL_OUTPUT_NAME})
+def hide_panel(window):
+    if window.active_panel() == PANEL_OUTPUT_NAME:
+        window.run_command('hide_panel', {'panel': PANEL_OUTPUT_NAME})
 
-def show_panel(view):
-    view.window().run_command('show_panel', {'panel': PANEL_OUTPUT_NAME})
+def show_panel(window):
+    window.run_command('show_panel', {'panel': PANEL_OUTPUT_NAME})
