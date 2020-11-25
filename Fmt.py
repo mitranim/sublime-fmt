@@ -12,7 +12,6 @@ PANEL_OUTPUT_NAME = 'output.' + PLUGIN_NAME
 
 class fmt_listener(sublime_plugin.EventListener):
     def on_pre_save(self, view):
-        hide_panel(view.window())
         if is_enabled(view) and get_setting(view, 'format_on_save'):
             view.run_command('fmt_format_buffer')
 
@@ -20,6 +19,8 @@ class fmt_format_buffer(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
         content = view.substr(sublime.Region(0, view.size()))
+
+        hide_panel(view.window())
 
         try:
             output = format(
