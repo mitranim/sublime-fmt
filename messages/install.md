@@ -9,14 +9,12 @@ Fmt has NO DEFAULT FORMATTERS. You must specify them in the plugin settings:
 Example for Go:
 
     {
-      "scopes": {
-        "source.go": {
-          "cmd": ["goimports"],
-        },
-      },
+      "rules": [
+        {"selector": "source.go", "cmd": ["goimports"]},
+      ],
     }
 
-If you're not familiar with Sublime's concept of "scope", think of it roughly as "syntax type".
+To understand Sublime scopes and selector matching, read this short official doc: https://www.sublimetext.com/docs/selectors.html.
 
 HOW TO GET SCOPE NAME:
 

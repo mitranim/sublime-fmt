@@ -1,29 +1,31 @@
 {
   /*
-  Settings per scope. Each key must be a scope such as "source.go". Each value
-  must be a dict that contains overrides for global settings such as "cmd".
+  Formatting rules.
+
+  The only special field is "selector": a syntax type such as "source.python".
+  See the docs on selectors: https://www.sublimetext.com/docs/selectors.html.
+  All other fields are overrides for global settings such as "cmd".
 
   Example for Go:
 
-    "scopes": {
-      "scope.go": {
-        "cmd": ["goimports"],
-      },
-    },
+    "rules": [
+      {"selector": "scope.go", "cmd": ["goimports"]},
+    ],
   */
-  "scopes": {},
+  "rules": [],
 
   /*
   Command to invoke, with command line arguments. Must be a list of strings. The
   command must communicate over standard input/output.
 
-  This must be configured PER SCOPE in the "scopes" setting. It's listed at the
-  root level only for documentation purposes.
+  This must be configured PER SELECTOR in the "rules" setting. It's listed at
+  the root level only for documentation purposes.
   */
   "cmd": null,
 
   /*
-  Format current buffer on save. Enabled by default.
+  Format current buffer on save. Enabled by default. Can be overridden for
+  individual scope selectors.
 
   Note that you can format the buffer manually via the "Fmt: Format Buffer"
   command.
@@ -62,7 +64,8 @@
 
   /*
   Determines how to replace the contents of the current buffer with the
-  formatted output. Possible values:
+  formatted output. Can be overridden for individual scope selectors.
+  Possible values:
 
     * "diff":    -- more complicated but better at preserving cursor position
 

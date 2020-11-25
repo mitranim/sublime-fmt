@@ -57,7 +57,7 @@ def format(view, input, encoding):
     cmd = get_setting(view, 'cmd')
 
     if not cmd:
-        raise Exception('missing setting "cmd" for scope "{}"'.format(view_scope(view)))
+        raise Exception('unable to find setting "cmd" for scope "{}"'.format(view_scope(view)))
 
     if not isinstance(cmd, list):
         raise Exception('expected setting "cmd" to be a list, found {}'.format(cmd))
@@ -189,16 +189,20 @@ def guess_cwd(view):
 
 def get_in(val, *path):
     for key in path:
-        if (
-            isinstance(val, dict) and key in val
-        ) or (
-            (isinstance(val, list) or isinstance(val, tuple)) and
-            (isinstance(key, int) and len(val) > key)
-        ):
-            val = val[key]
-        else:
+        val, ok = get(val, key)
+        if not ok:
             return (None, False)
     return (val, True)
+
+def get(val, key):
+    if (
+        isinstance(val, dict) and key in val
+    ) or (
+        (isinstance(val, list) or isinstance(val, tuple)) and
+        (isinstance(key, int) and len(val) > key)
+    ):
+        return (val[key], True)
+    return (None, False)
 
 def view_scope(view):
     scopes = view.scope_name(0)
@@ -208,7 +212,8 @@ def get_setting(view, key):
     scope = view_scope(view)
     overrides = view.settings().get(PLUGIN_NAME)
 
-    (val, found) = get_in(overrides, 'scopes', scope, key)
+    rule = rule_for_scope(get(overrides, 'rules')[0], scope)
+    (val, found) = get(rule, key)
     if found:
         return val
 
@@ -218,11 +223,26 @@ def get_setting(view, key):
 
     settings = sublime.load_settings(SETTINGS_KEY)
 
-    (val, found) = get_in(settings.get('scopes'), scope, key)
+    rule = rule_for_scope(settings.get('rules'), scope)
+    (val, found) = get(rule, key)
     if found:
         return val
 
     return settings.get(key)
+
+def rule_for_scope(rules, scope):
+    if not rules:
+        return None
+    rule = max(rules, key = lambda rule: rule_score(rule, scope))
+    # Note: `max` doesn't ensure this condition.
+    if rule_score(rule, scope) > 0:
+        return rule
+    return None
+
+def rule_score(rule, scope):
+    if 'selector' not in rule:
+        raise Exception('missing "selector" in rule {}'.format(rule))
+    return sublime.score_selector(scope, rule['selector'])
 
 def is_enabled(view):
     return bool(get_setting(view, 'cmd'))

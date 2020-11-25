@@ -52,15 +52,13 @@ The plugin has _no default formatters_. You must specify them in the plugin sett
 
 ```sublime-settings
 {
-  "scopes": {
-    "source.go": {
-      "cmd": ["goimports"],
-    },
+  "rules": [
+    {"selector": "source.go", "cmd": ["goimports"]},
   },
 }
 ```
 
-If you're not familiar with Sublime's concept of "scope", think of it roughly as "syntax type".
+To understand Sublime scopes and selector matching, read this short official doc: https://www.sublimetext.com/docs/selectors.html.
 
 **How to get scope name**. Option 1: menu → Tools → Developer → Show Scope Name. Option 2: run the command `Fmt: Format Buffer`, and if not configured for the current scope, it will tell you!
 
@@ -85,11 +83,12 @@ For overrides, open project or global settings and make a `"Fmt"` entry:
 {
   "Fmt": {
     "format_on_save": false,
-    "scopes": {
-      "source.some_lang": {
+    "rules": [
+      {
+        "selector": "source.some_lang",
         "cmd": ["some_lang_fmt", "--some_arg"],
       },
-    },
+    ],
   },
 }
 ```
@@ -108,8 +107,10 @@ To avoid potential conflicts, this plugin does not come with hotkeys. To hotkey
 the format command, add something like this to your `.sublime-keymap`:
 
 ```sublime-keymap
-{"keys": ["ctrl+super+k"], "command": "fmt_format_buffer"}
+{"keys": ["primary+k", "primary+j"], "command": "fmt_format_buffer"}
 ```
+
+This will trigger on a quick `⌘kj` or `^kj` depending on your OS.
 
 ## Changelog
 
