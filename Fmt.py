@@ -35,18 +35,17 @@ class fmt_format_buffer(sublime_plugin.TextCommand):
         merge_type = get_setting(view, 'merge_type')
 
         if merge_type == 'diff':
-            merge_into_view(view, edit, output)
-
-        elif merge_type == 'replace':
-            position = view.viewport_position()
-            view.replace(edit, sublime.Region(0, view.size()), output)
-            # Works only on the main thread, hence lambda and timer.
-            restore = lambda: view.set_viewport_position(position, animate=False)
-            sublime.set_timeout(restore, 0)
-
-        else:
-            report(view, 'unknown value of setting "merge_type": {}'.format(merge_type))
+            try:
+                merge_into_view(view, edit, output)
+            except difflib.TooManyDiffsException:
+                replace_view(view, edit, output)
             return
+
+        if merge_type == 'replace':
+            replace_view(view, edit, output)
+            return
+
+        report(view, 'unknown value of setting "merge_type": {}'.format(merge_type))
 
 class fmt_panel_replace_content(sublime_plugin.TextCommand):
     def run(self, edit, text):
@@ -100,11 +99,11 @@ def format(view, input, encoding):
 
     return stdout
 
-def merge_into_view(view, edit, new_src):
+def merge_into_view(view, edit, content):
     def subview(start, end):
         return view.substr(sublime.Region(start, end))
 
-    diffs = difflib.myers_diffs(subview(0, view.size()), new_src)
+    diffs = difflib.myers_diffs(subview(0, view.size()), content)
     difflib.cleanup_efficiency(diffs)
     merged_len = 0
 
@@ -123,6 +122,13 @@ def merge_into_view(view, edit, new_src):
                 report(view, "mismatch between diff's source and current content")
                 return
             view.erase(edit, sublime.Region(merged_len, merged_len+patch_len))
+
+def replace_view(view, edit, content):
+    position = view.viewport_position()
+    view.replace(edit, sublime.Region(0, view.size()), content)
+    # Works only on the main thread, hence lambda and timer.
+    restore = lambda: view.set_viewport_position(position, animate=False)
+    sublime.set_timeout(restore, 0)
 
 def report(view, err):
     window = view.window()

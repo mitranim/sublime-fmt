@@ -5,7 +5,7 @@ Computes the difference between two texts to create a patch.
 Applies the patch onto another text, allowing for errors.
 
 Originally found at http://code.google.com/p/google-diff-match-patch/.
-Edited for clarity and simplicity by Nelo Mitranim, 2017.
+Edited by Nelo Mitranim (2017, 2020).
 """
 
 import re
@@ -24,6 +24,11 @@ DIFF_EDIT_COST = 4
 BLANK_LINE_END = re.compile(r"\n\r?\n$")
 
 BLANK_LINE_START = re.compile(r"^\r?\n\r?\n")
+
+MAX_DIFFS_THRESHOLD = 32
+
+class TooManyDiffsException(Exception):
+    pass
 
 def myers_diffs(text1, text2, checklines=True):
     """Find the differences between two texts.  Simplifies the problem by
@@ -295,6 +300,9 @@ def bisect_split_diffs(text1, text2, x, y):
     # Compute both diffs serially.
     diffs = myers_diffs(text1a, text2a, False)
     diffsb = myers_diffs(text1b, text2b, False)
+
+    if len(diffs) + len(diffsb) > MAX_DIFFS_THRESHOLD:
+        raise TooManyDiffsException()
 
     return diffs + diffsb
 
