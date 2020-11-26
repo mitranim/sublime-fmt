@@ -20,6 +20,19 @@
 
   This must be configured PER SELECTOR in the "rules" setting. It's listed at
   the root level only for documentation purposes.
+
+  Supports variable substitution using the shell variable interpolation syntax:
+
+    "cmd": ["some_command", "$tab_size"]
+
+  Supports all variables listed in the documentation for build systems:
+  https://www.sublimetext.com/docs/build_systems.html. Additionally, supports
+  the following variables:
+
+    * $tab_size -- indent width, usually 2 or 4; takes the "tab_size" setting
+                   from the current view.
+
+    * $indent   -- literal indent: either N spaces or a single tab.
   */
   "cmd": null,
 

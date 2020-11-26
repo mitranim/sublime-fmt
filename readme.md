@@ -114,6 +114,10 @@ This will trigger on a quick `⌘kj` or `^kj` depending on your OS.
 
 ## Changelog
 
+**2020-11-26**. Support variable substitution in `cmd`.
+
+**2020-11-25**. Use scope selectors instead of exactly matching the scope name.
+
 **2020-10-25**. Support subprocess timeout, always kill the subprocess.
 
 **2020-10-23**. Support several ways of printing errors. By default, errors are shown in a transient output panel at the bottom.

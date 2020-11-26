@@ -59,10 +59,12 @@ def format(view, input, encoding):
     if not cmd:
         raise Exception('unable to find setting "cmd" for scope "{}"'.format(view_scope(view)))
 
-    if not isinstance(cmd, list):
-        raise Exception('expected setting "cmd" to be a list, found {}'.format(cmd))
+    if not isinstance(cmd, list) or not every(cmd, is_string):
+        raise Exception('expected setting "cmd" to be a list of strings, found {}'.format(cmd))
 
-    timeout = get_setting(view, 'timeout')
+    # Support "$variable" substitutions.
+    variables = extract_variables(view)
+    cmd = [sublime.expand_variables(arg, variables) for arg in cmd]
 
     proc = sub.Popen(
         args=cmd,
@@ -73,6 +75,8 @@ def format(view, input, encoding):
         universal_newlines=False,
         cwd=guess_cwd(view),
     )
+
+    timeout = get_setting(view, 'timeout')
 
     try:
         (stdout, stderr) = proc.communicate(input=bytes(input, encoding=encoding), timeout=timeout)
@@ -266,3 +270,24 @@ def hide_panel(window):
 
 def show_panel(window):
     window.run_command('show_panel', {'panel': PANEL_OUTPUT_NAME})
+
+def every(iter, fun):
+    if iter:
+        for val in iter:
+            if not fun(val):
+                return False
+    return True
+
+def is_string(val):
+    return isinstance(val, str)
+
+def extract_variables(view):
+    settings = view.settings()
+    tab_size = settings.get('tab_size') or 0
+    indent = ' ' * tab_size if settings.get('translate_tabs_to_spaces') else '\t'
+
+    vars = view.window().extract_variables()
+    vars['tab_size'] = str(tab_size)
+    vars['indent'] = indent
+
+    return vars
