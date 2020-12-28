@@ -134,7 +134,7 @@ def replace_view(view, edit, content):
     restore = lambda: view.set_viewport_position(position, animate=False)
     sublime.set_timeout(restore, 0)
 
-def report(view, err):
+def report(view, msg):
     window = view.window()
     style = get_setting(view, 'error_style')
 
@@ -142,20 +142,20 @@ def report(view, err):
         return
 
     if style == 'console':
-        if isinstance(err, Exception):
-            raise err
-        msg = '[{}] {}'.format(PLUGIN_NAME, err)
+        if isinstance(msg, Exception):
+            raise msg
+        msg = '[{}] {}'.format(PLUGIN_NAME, msg)
         print(msg)
         return
 
     if style == 'panel':
-        msg = '[{}] {}'.format(PLUGIN_NAME, err)
+        msg = '[{}] {}'.format(PLUGIN_NAME, msg)
         ensure_panel(window).run_command('fmt_panel_replace_content', {'text': msg})
         show_panel(window)
         return
 
     if style == 'popup':
-        msg = '[{}] {}'.format(PLUGIN_NAME, err)
+        msg = '[{}] {}'.format(PLUGIN_NAME, msg)
         sublime.error_message(msg)
         return
 
@@ -289,5 +289,6 @@ def extract_variables(view):
     vars = view.window().extract_variables()
     vars['tab_size'] = str(tab_size)
     vars['indent'] = indent
+    vars.update(os.environ)
 
     return vars

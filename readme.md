@@ -114,6 +114,8 @@ This will trigger on a quick `⌘kj` or `^kj` depending on your OS.
 
 ## Changelog
 
+**2020-12-28**. Support env variable substitution. Format-on-save is no longer enabled by default.
+
 **2020-11-26**. Support variable substitution in `cmd`.
 
 **2020-11-25**. Use scope selectors instead of exactly matching the scope name.

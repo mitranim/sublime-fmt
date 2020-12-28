@@ -25,9 +25,12 @@
 
     "cmd": ["some_command", "$tab_size"]
 
-  Supports all variables listed in the documentation for build systems:
-  https://www.sublimetext.com/docs/build_systems.html. Additionally, supports
-  the following variables:
+  Supported variables:
+
+    * Environment variables via `os.environ`.
+
+    * Special variables available in build systems:
+      https://www.sublimetext.com/docs/build_systems.html.
 
     * $tab_size -- indent width, usually 2 or 4; takes the "tab_size" setting
                    from the current view.
@@ -37,13 +40,13 @@
   "cmd": null,
 
   /*
-  Format current buffer on save. Enabled by default. Can be overridden for
+  Format current buffer on save. Disabled by default. Can be overridden for
   individual scope selectors.
 
   Note that you can format the buffer manually via the "Fmt: Format Buffer"
   command.
   */
-  "format_on_save": true,
+  "format_on_save": false,
 
   /*
   Determines the CWD of the subprocess. Possible values:
