@@ -4,7 +4,7 @@ Sublime Text plugin for auto-formatting arbitrary code by calling arbitrary exec
 
 Features:
 
-* Auto-format: on save and/or on demand (configurable).
+* Format on demand. Optionally auto-format on save.
 * Configure executables and other settings per _scope_ (syntax type: `source.go`, `source.rust` and so on).
 * Preserve cursor and scroll position when formatting.
 * Show errors in an output panel (configurable).
@@ -62,7 +62,9 @@ To understand Sublime scopes and selector matching, read this short official doc
 
 **How to get scope name**. Option 1: menu → Tools → Developer → Show Scope Name. Option 2: run the command `Fmt: Format Buffer`, and if not configured for the current scope, it will tell you!
 
-By default, this will autoformat on save (configurable). You can format manually with the `Fmt: Format Buffer` command in the command palette.
+To format on demand, run the `Fmt: Format Buffer` command from the command palette. See below how to configure hotkeys.
+
+To auto-format on save, set `"format_on_save": true` in the settings. Can be global or per rule.
 
 ## Settings
 
@@ -82,7 +84,6 @@ For overrides, open project or global settings and make a `"Fmt"` entry:
 ```sublime-settings
 {
   "Fmt": {
-    "format_on_save": false,
     "rules": [
       {
         "selector": "source.some_lang",
@@ -92,6 +93,8 @@ For overrides, open project or global settings and make a `"Fmt"` entry:
   },
 }
 ```
+
+A rule may contain _any_ of the root-level settings, such as `format_on_save`. This allows fine-tuning.
 
 ## Commands
 
