@@ -25,14 +25,12 @@ Many formatters just call a subprocess and use stdio. One plugin can handle them
 
 ## Installation
 
-<!--
 ### Package Control
 
 1. Get [Package Control](https://packagecontrol.io).
-2. Open command palette: ⇪⌘P or ⇪^P.
+2. Open the command palette: ⇪⌘P or ⇪^P.
 3. `Package Control: Install Package`.
 4. `Fmt`.
--->
 
 ### Manual
 
