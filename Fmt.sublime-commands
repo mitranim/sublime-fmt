@@ -1,6 +1,8 @@
 [
+  {"caption": "Fmt: Format Buffer", "command": "fmt_format_buffer"},
   {
-    "caption": "Fmt: Format Buffer",
-    "command": "fmt_format_buffer"
-  }
+    "caption": "Fmt: Settings",
+    "command": "edit_settings",
+    "args": {"base_file": "${packages}/Fmt/Fmt.sublime-settings", "default": "{\n\t$0\n}"},
+  },
 ]

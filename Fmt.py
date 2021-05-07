@@ -18,7 +18,7 @@ class fmt_listener(sublime_plugin.EventListener):
 class fmt_format_buffer(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
-        content = view.substr(sublime.Region(0, view.size()))
+        content = view.substr(view_region(view))
 
         hide_panel(view.window())
 
@@ -50,8 +50,8 @@ class fmt_format_buffer(sublime_plugin.TextCommand):
 class fmt_panel_replace_content(sublime_plugin.TextCommand):
     def run(self, edit, text):
         view = self.view
-        view.erase(edit, sublime.Region(0, view.size()))
-        view.insert(edit, 0, text)
+        view.replace(edit, view_region(view), text)
+        view.sel().clear()
 
 def format(view, input, encoding):
     cmd = get_setting(view, 'cmd')
@@ -129,7 +129,7 @@ def merge_into_view(view, edit, content):
 
 def replace_view(view, edit, content):
     position = view.viewport_position()
-    view.replace(edit, sublime.Region(0, view.size()), content)
+    view.replace(edit, view_region(view), content)
     # Works only on the main thread, hence lambda and timer.
     restore = lambda: view.set_viewport_position(position, animate=False)
     sublime.set_timeout(restore, 0)
@@ -292,3 +292,6 @@ def extract_variables(view):
     vars.update(os.environ)
 
     return vars
+
+def view_region(view):
+    return sublime.Region(0, view.size())

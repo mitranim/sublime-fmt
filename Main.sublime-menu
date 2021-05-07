@@ -13,7 +13,7 @@
                 "command": "edit_settings",
                 "args": {
                   "base_file": "${packages}/Fmt/Fmt.sublime-settings",
-                  "default": "// Fmt Settings - User\n{\n\t$0\n}\n"
+                  "default": "{\n\t$0\n}"
                 }
               }
             ]
