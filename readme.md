@@ -52,7 +52,7 @@ The plugin has _no default formatters_. You must specify them in the plugin sett
 {
   "rules": [
     {"selector": "source.go", "cmd": ["goimports"]},
-  },
+  ],
 }
 ```
 
