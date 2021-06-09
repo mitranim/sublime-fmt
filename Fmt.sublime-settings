@@ -2,9 +2,10 @@
   /*
   Formatting rules.
 
-  The only special field is "selector": a syntax type such as "source.python".
-  See the docs on selectors: https://www.sublimetext.com/docs/selectors.html.
-  All other fields are overrides for global settings such as "cmd".
+  Every rule is a dictionary, where the only special field is "selector": a
+  syntax type such as "source.python". See the docs on selectors:
+  https://www.sublimetext.com/docs/selectors.html. All other fields are
+  overrides for global settings such as "cmd".
 
   Example for Go:
 
@@ -68,7 +69,7 @@
   /*
   How to show errors. Possible values:
 
-    * null         -- hide errors completely
+    * ""           -- hide errors completely
 
     * "console"    -- print errors to the Sublime console
 
@@ -79,8 +80,11 @@
   "error_style": "panel",
 
   /*
-  Determines how to replace the contents of the current buffer with the
-  formatted output. Can be overridden for individual scope selectors.
+  Determines how to replace buffer contents. Can be overridden for individual
+  scope selectors. Warning: "diff" can be very slow when the number of changes
+  exceeds a few dozen. Fmt will try to automatically detect this and fall back
+  on "replace".
+
   Possible values:
 
     * "diff":    -- more complicated but better at preserving cursor position
