@@ -1,5 +1,6 @@
 [
   {"caption": "Fmt: Format Buffer", "command": "fmt_format_buffer"},
+  {"caption": "Fmt: Format Selection", "command": "fmt_format_selection"},
   {
     "caption": "Preferences: Fmt Settings",
     "command": "edit_settings",

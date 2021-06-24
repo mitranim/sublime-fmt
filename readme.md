@@ -8,6 +8,8 @@ Features:
 * Configure executables and other settings per _scope_ (syntax type: `source.go`, `source.rust` and so on).
 * Preserve cursor and scroll position when formatting.
 * Show errors in an output panel (configurable).
+* Format either an entire file, or only selection.
+  * Selection formatting works for embedded syntaxes, such as JS inside HTML.
 
 Limitations:
 
@@ -48,7 +50,7 @@ To find the packages directory on your system, use Sublime Text menu → Prefere
 
 The plugin has _no default formatters_. You must specify them in the plugin settings. Example for Go:
 
-```sublime-settings
+```json
 {
   "rules": [
     {"selector": "source.go", "cmd": ["goimports"]},
@@ -79,7 +81,7 @@ The plugin looks for settings in the following places, with the following priori
 
 For overrides, open project or global settings and make a `"Fmt"` entry:
 
-```sublime-settings
+```json
 {
   "Fmt": {
     "rules": [
@@ -99,19 +101,21 @@ A rule may contain _any_ of the root-level settings, such as `format_on_save`. T
 In Sublime's command palette:
 
 * `Fmt: Format Buffer`
+* `Fmt: Format Selection`
 
 ## Hotkeys
 
 Hotkeys? More like _notkeys_!
 
 To avoid potential conflicts, this plugin does not come with hotkeys. To hotkey
-the format command, add something like this to your `.sublime-keymap`:
+the format commands, add something like this to your `.sublime-keymap`:
 
 ```sublime-keymap
-{"keys": ["primary+k", "primary+j"], "command": "fmt_format_buffer"}
+{"keys": ["primary+k", "primary+j"], "command": "fmt_format_buffer"},
+{"keys": ["primary+k", "primary+k"], "command": "fmt_format_selection"},
 ```
 
-This will trigger on a quick `⌘kj` or `^kj` depending on your OS.
+Depending on your OS, "primary" is either Cmd or Ctrl.
 
 ## Changelog
 

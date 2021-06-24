@@ -18,34 +18,21 @@ class fmt_listener(sublime_plugin.EventListener):
 class fmt_format_buffer(sublime_plugin.TextCommand):
     def run(self, edit):
         view = self.view
-        content = view.substr(view_region(view))
-
-        hide_panel(view.window())
-
         try:
-            output = format(
-                view=view,
-                input=content,
-                encoding=view_encoding(view),
-            )
+            fmt_region(view, edit, view_region(view))
         except Exception as err:
             report(view, err)
-            return
 
-        merge_type = get_setting(view, 'merge_type')
+class fmt_format_selection(sublime_plugin.TextCommand):
+    def run(self, edit):
+        view = self.view
 
-        if merge_type == 'diff':
+        for region in view.sel():
             try:
-                merge_into_view(view, edit, output)
-            except difflib.TooManyDiffsException:
-                replace_view(view, edit, output)
-            return
-
-        if merge_type == 'replace':
-            replace_view(view, edit, output)
-            return
-
-        report(view, 'unknown value of setting "merge_type": {}'.format(merge_type))
+                fmt_region(view, edit, region)
+            except Exception as err:
+                report(view, err)
+                break
 
 class fmt_panel_replace_content(sublime_plugin.TextCommand):
     def run(self, edit, text):
@@ -59,11 +46,34 @@ class fmt_panel_replace_content(sublime_plugin.TextCommand):
 class ErrMsg(Exception):
     pass
 
-def format(view, input, encoding):
-    cmd = get_setting(view, 'cmd')
+def fmt_region(view, edit, region):
+    if region.empty():
+        return
+
+    hide_panel(view.window())
+
+    scope = view.scope_name(region.begin())
+    fmted = fmt(view, view.substr(region), view_encoding(view), scope)
+    merge_type = get_setting(view, 'merge_type', scope)
+
+    if merge_type == 'diff':
+        try:
+            merge_into_view(view, edit, fmted, region)
+        except difflib.TooManyDiffsException:
+            replace_view(view, edit, fmted, region)
+        return
+
+    if merge_type == 'replace':
+        replace_view(view, edit, fmted, region)
+        return
+
+    report(view, 'unknown value of setting "merge_type": {}'.format(merge_type))
+
+def fmt(view, input, encoding, scope):
+    cmd = get_setting(view, 'cmd', scope)
 
     if not cmd:
-        raise ErrMsg('unable to find setting "cmd" for scope "{}"'.format(view_scope(view)))
+        raise ErrMsg('unable to find setting "cmd" for scope "{}"'.format(scope))
 
     if not isinstance(cmd, list) or not every(cmd, is_string):
         raise ErrMsg('expected setting "cmd" to be a list of strings, found {}'.format(cmd))
@@ -82,7 +92,7 @@ def format(view, input, encoding):
         cwd=guess_cwd(view),
     )
 
-    timeout = get_setting(view, 'timeout')
+    timeout = get_setting(view, 'timeout', scope)
 
     try:
         (stdout, stderr) = proc.communicate(input=bytes(input, encoding=encoding), timeout=timeout)
@@ -109,33 +119,33 @@ def format(view, input, encoding):
 
     return stdout
 
-def merge_into_view(view, edit, content):
+def merge_into_view(view, edit, content, region):
     def subview(start, end):
         return view.substr(sublime.Region(start, end))
 
     diffs = difflib.myers_diffs(subview(0, view.size()), content)
     difflib.cleanup_efficiency(diffs)
-    merged_len = 0
+    offset = region.begin()
 
     for (op_type, patch) in diffs:
         patch_len = len(patch)
         if op_type == difflib.Ops.EQUAL:
-            if subview(merged_len, merged_len+patch_len) != patch:
+            if subview(offset, offset+patch_len) != patch:
                 report(view, "mismatch between diff's source and current content")
                 return
-            merged_len += patch_len
+            offset += patch_len
         elif op_type == difflib.Ops.INSERT:
-            view.insert(edit, merged_len, patch)
-            merged_len += patch_len
+            view.insert(edit, offset, patch)
+            offset += patch_len
         elif op_type == difflib.Ops.DELETE:
-            if subview(merged_len, merged_len+patch_len) != patch:
+            if subview(offset, offset+patch_len) != patch:
                 report(view, "mismatch between diff's source and current content")
                 return
-            view.erase(edit, sublime.Region(merged_len, merged_len+patch_len))
+            view.erase(edit, sublime.Region(offset, offset+patch_len))
 
-def replace_view(view, edit, content):
+def replace_view(view, edit, content, region):
     position = view.viewport_position()
-    view.replace(edit, view_region(view), content)
+    view.replace(edit, region, content)
     # Works only on the main thread, hence lambda and timer.
     restore = lambda: view.set_viewport_position(position, animate=False)
     sublime.set_timeout(restore, 0)
@@ -144,11 +154,11 @@ def report(view, msg):
     window = view.window()
     style = get_setting(view, 'error_style')
 
-    if style is None:
-        style = 'panel'
-
     if style == '':
         return
+
+    if style is None:
+        style = 'panel'
 
     if style == 'console':
         if isinstance(msg, Exception):
@@ -221,8 +231,10 @@ def view_scope(view):
     scopes = view.scope_name(0)
     return scopes[0:scopes.find(' ')]
 
-def get_setting(view, key):
-    scope = view_scope(view)
+def get_setting(view, key, scope = None):
+    if scope is None:
+        scope = view_scope(view)
+
     overrides = view.settings().get(PLUGIN_NAME)
 
     rule = rule_for_scope(get(overrides, 'rules')[0], scope)
@@ -246,10 +258,13 @@ def get_setting(view, key):
 def rule_for_scope(rules, scope):
     if not rules:
         return None
+
     rule = max(rules, key = lambda rule: rule_score(rule, scope))
+
     # Note: `max` doesn't ensure this condition.
     if rule_score(rule, scope) > 0:
         return rule
+
     return None
 
 def rule_score(rule, scope):

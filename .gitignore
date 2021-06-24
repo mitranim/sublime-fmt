@@ -1,0 +1,12 @@
+/*
+!/*ignore
+!/.python-version
+!/unlicense
+!/*.py
+!/*.md
+!/*.json
+!/*.sublime-*
+
+!/messages
+/messages/*
+!/messages/*.md
