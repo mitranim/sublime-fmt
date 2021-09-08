@@ -41,6 +41,15 @@
   "cmd": null,
 
   /*
+  Additional environment variables for the subprocess. Environment is always
+  inherited from Sublime Text, which generally tries to mimic your shell env.
+  This is needed only for additional variables and overrides.
+
+  Can be configured per rule / per selector.
+  */
+  "env": null,
+
+  /*
   Format current buffer on save. Disabled by default. Can be overridden for
   individual scope selectors.
 

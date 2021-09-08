@@ -90,6 +90,7 @@ def fmt(view, input, encoding, scope):
         startupinfo=process_startup_info(),
         universal_newlines=False,
         cwd=guess_cwd(view),
+        env=get_env(view, scope),
     )
 
     timeout = get_setting(view, 'timeout', scope)
@@ -319,3 +320,11 @@ def extract_variables(view):
 
 def view_region(view):
     return sublime.Region(0, view.size())
+
+def get_env(view, scope):
+    val = get_setting(view, 'env', scope)
+    if val is None:
+        return None
+    env = os.environ.copy()
+    env.update(val)
+    return env
