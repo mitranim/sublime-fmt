@@ -124,6 +124,8 @@ Depending on your OS, "primary" is either Cmd or Ctrl.
 
 ## Changelog
 
+**2022-07-11**. Use `"merge_type": "replace"` by default. Diff is now opt-in due to extreme performance degradation for large amounts of diffs.
+
 **2020-12-28**. Support env variable substitution. Format-on-save is no longer enabled by default.
 
 **2020-11-26**. Support variable substitution in `cmd`.
