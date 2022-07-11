@@ -10,7 +10,7 @@
   Example for Go:
 
     "rules": [
-      {"selector": "scope.go", "cmd": ["goimports"]},
+      {"selector": "source.go", "cmd": ["goimports"]},
     ],
   */
   "rules": [],
