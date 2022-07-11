@@ -53,7 +53,12 @@ The plugin has _no default formatters_. You must specify them in the plugin sett
 ```json
 {
   "rules": [
-    {"selector": "source.go", "cmd": ["goimports"]},
+    {
+      "selector": "source.go",
+      "cmd": ["goimports"],
+      "format_on_save": true,
+      "merge_type": "diff",
+    },
   ],
 }
 ```

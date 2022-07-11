@@ -2,7 +2,7 @@
   /*
   Formatting rules.
 
-  Every rule is a dictionary, where the only special field is "selector": a
+  Every rule is a dictionary, where the only required field is "selector": a
   syntax type such as "source.python". See the docs on selectors:
   https://www.sublimetext.com/docs/selectors.html. All other fields are
   overrides for global settings such as "cmd".
@@ -10,7 +10,12 @@
   Example for Go:
 
     "rules": [
-      {"selector": "source.go", "cmd": ["goimports"]},
+      {
+        "selector": "source.go",
+        "cmd": ["goimports"],
+        "format_on_save": true,
+        "merge_type": "diff",
+      },
     ],
   */
   "rules": [],
@@ -19,8 +24,9 @@
   Command to invoke, with command line arguments. Must be a list of strings. The
   command must communicate over standard input/output.
 
-  This must be configured PER SELECTOR in the "rules" setting. It's listed at
-  the root level only for documentation purposes.
+  While technically this can be set at the top level, in practice you should set
+  this PER SELECTOR in the "rules" setting, using different fmters for
+  different scopes.
 
   Supports variable substitution using the shell variable interpolation syntax:
 
@@ -90,17 +96,17 @@
 
   /*
   Determines how to replace buffer contents. Can be overridden for individual
-  scope selectors. Warning: "diff" can be very slow when the number of changes
-  exceeds a few dozen. Fmt will try to automatically detect this and fall back
-  on "replace".
+  scope selectors. "diff" is more precise and preserves scroll and cursor
+  position, but can be EXTREMELY slow when the number of changes exceeds a few
+  dozen.
 
   Possible values:
 
-    * "diff":    -- more complicated but better at preserving cursor position
-
     * "replace": -- simpler but doesn't preserve cursor position
+
+    * "diff":    -- more complicated but better at preserving cursor position
   */
-  "merge_type": "diff",
+  "merge_type": "replace",
 
   /*
   Subprocess timeout in seconds. If execution takes longer, Fmt kills the

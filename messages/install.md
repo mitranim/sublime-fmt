@@ -1,6 +1,6 @@
-Fmt installed!
+## Fmt Setup
 
-## Setup
+(More in the readme: https://github.com/mitranim/sublime-fmt)
 
 Fmt has NO DEFAULT FORMATTERS. You must specify them in the plugin settings:
 
@@ -10,7 +10,12 @@ Example for Go:
 
     {
       "rules": [
-        {"selector": "source.go", "cmd": ["goimports"]},
+        {
+          "selector": "source.go",
+          "cmd": ["goimports"],
+          "format_on_save": true,
+          "merge_type": "diff",
+        },
       ],
     }
 
