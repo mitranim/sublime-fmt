@@ -107,15 +107,14 @@ def fmt(view, input, encoding, scope):
     stderr = stderr.decode(encoding)
 
     if proc.returncode != 0:
-        err = sub.CalledProcessError(proc.returncode, cmd)
-        msg = str(err)
+        msg = str(sub.CalledProcessError(proc.returncode, cmd))
         if len(stderr) > 0:
             msg += ':\n' + stderr
         elif len(stdout) > 0:
             msg += ':\n' + stdout
         raise ErrMsg(msg)
 
-    if len(stderr) > 0:
+    if len(stdout) == 0 and len(stderr) > 0:
         raise ErrMsg(stderr)
 
     return stdout

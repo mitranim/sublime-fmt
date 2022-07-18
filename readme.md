@@ -6,7 +6,7 @@ Features:
 
 * Format on demand. Optionally auto-format on save.
 * Configure executables and other settings per _scope_ (syntax type: `source.go`, `source.rust` and so on).
-* Preserve cursor and scroll position when formatting.
+* Optionally preserve cursor and scroll position when formatting, via `"merge_type": "diff"`.
 * Show errors in an output panel (configurable).
 * Format either an entire file, or only selection.
   * Selection formatting works for embedded syntaxes, such as JS inside HTML.
@@ -48,7 +48,7 @@ To find the packages directory on your system, use Sublime Text menu → Prefere
 
 ## Usage
 
-The plugin has _no default formatters_. You must specify them in the plugin settings. Example for Go:
+The plugin has _no default formatters_. It invokes CLI programs installed globally on your system. You must specify them in the plugin settings. Example for Go:
 
 ```json
 {
@@ -120,9 +120,11 @@ the format commands, add something like this to your `.sublime-keymap`:
 {"keys": ["primary+k", "primary+k"], "command": "fmt_format_selection"},
 ```
 
-Depending on your OS, "primary" is either Cmd or Ctrl.
+Sublime automatically resolves "primary" to "super" on MacOS and to "ctrl" on other systems.
 
 ## Changelog
+
+**2022-07-18**. Ignore informational output over stderr when the subprocess exits with 0 and stdout is non-empty.
 
 **2022-07-11**. Use `"merge_type": "replace"` by default. Diff is now opt-in due to extreme performance degradation for large amounts of diffs.
 
@@ -139,3 +141,5 @@ Depending on your OS, "primary" is either Cmd or Ctrl.
 ## License
 
 https://unlicense.org
+
+`difflib.py` is based on code which is published under Apache license, see the hyperlink in the file. It underwent significant edits, and its licensing status is unknown to me. Everything else is original and under Unlicense.

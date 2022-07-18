@@ -2,7 +2,7 @@
 
 (More in the readme: https://github.com/mitranim/sublime-fmt)
 
-Fmt has NO DEFAULT FORMATTERS. You must specify them in the plugin settings:
+Fmt has NO DEFAULT FORMATTERS. It invokes CLI programs installed globally on your system. You must specify them in the plugin settings:
 
     menu → Preferences → Package Settings → Fmt → Settings
 
