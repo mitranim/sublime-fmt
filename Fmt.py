@@ -169,7 +169,7 @@ def report(view, msg):
 
     if style == 'panel':
         msg = '[{}] {}'.format(PLUGIN_NAME, msg)
-        ensure_panel(window).run_command('fmt_panel_replace_content', {'text': msg})
+        ensure_panel(window).run_command('fmt_panel_replace_content', {'text': msg.replace('\r\n', '\n')})
         show_panel(window)
         return
 
