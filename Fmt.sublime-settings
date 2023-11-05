@@ -1,9 +1,9 @@
 {
   /*
-  Formatting rules.
+  Formatting rules should be added here. (In your own settings file.)
 
-  Every rule is a dictionary, where the only required field is "selector": a
-  syntax type such as "source.python". See the docs on selectors:
+  Every rule is a dictionary, where the only required field is "selector":
+  a syntax type such as "source.python". See the docs on selectors:
   https://www.sublimetext.com/docs/selectors.html. All other fields are
   overrides for global settings such as "cmd".
 
@@ -21,28 +21,29 @@
   "rules": [],
 
   /*
-  Command to invoke, with command line arguments. Must be a list of strings. The
-  command must communicate over standard input/output.
+  Command to invoke, with command line arguments. Must be a list of strings.
+  The command must communicate over standard input/output.
 
-  While technically this can be set at the top level, in practice you should set
-  this PER SELECTOR in the "rules" setting, using different fmters for
+  While technically this can be set at the top level, in practice you should
+  set this PER SELECTOR in the "rules" setting, using different fmters for
   different scopes.
 
-  Supports variable substitution using the shell variable interpolation syntax:
+  Supports variable substitution, using the shell variable interpolation
+  syntax:
 
     "cmd": ["some_command", "$tab_size"]
 
   Supported variables:
 
-    * Environment variables via `os.environ`.
+    - Environment variables via `os.environ`.
 
-    * Special variables available in build systems:
+    - Special variables available in build systems:
       https://www.sublimetext.com/docs/build_systems.html.
 
-    * $tab_size -- indent width, usually 2 or 4; takes the "tab_size" setting
+    - $tab_size -- Indent width, usually 2 or 4; takes the "tab_size" setting
                    from the current view.
 
-    * $indent   -- literal indent: either N spaces or a single tab.
+    - $indent   -- Literal indent: either N spaces or a single tab.
   */
   "cmd": null,
 
@@ -60,6 +61,7 @@
   individual scope selectors.
 
   Note that you can format the buffer manually via the "Fmt: Format Buffer"
+  command. You can also format selection via the `Fmt: Format Selection`
   command.
   */
   "format_on_save": false,
@@ -67,30 +69,30 @@
   /*
   Determines the CWD of the subprocess. Possible values:
 
-    * "auto"         -- try to use the current file's directory; fall back on
-      the project root, which is assumed to be the first directory in the
-      current window
+    - "auto"         -- Try to use the current file's directory; fall back on
+                        the project root, which is assumed to be the first
+                        directory in the current window.
 
-    * "project_root" -- use the project root, which is assumed to be the first
-      directory in the current window
+    - "project_root" -- Use the project root, which is assumed to be the first
+                        directory in the current window.
 
-    * "none"         -- don't set the CWD
+    - "none"         -- Don't set the CWD.
 
-    * ":<path>"      -- use hardcoded path; may be useful for project-specific
-      settings
+    - ":<path>"      -- Use hardcoded path; may be useful for project-specific
+      settings.
   */
   "cwd_mode": "auto",
 
   /*
   How to show errors. Possible values:
 
-    * ""           -- hide errors completely
+    - ""           -- Hide errors completely.
 
-    * "console"    -- print errors to the Sublime console
+    - "console"    -- Print errors to the Sublime console.
 
-    * "panel"      -- show an output panel at the bottom
+    - "panel"      -- Show an output panel at the bottom.
 
-    * "popup"      -- show obnoxious popup windows
+    - "popup"      -- Show obnoxious popup windows.
   */
   "error_style": "panel",
 
@@ -102,16 +104,15 @@
 
   Possible values:
 
-    * "replace": -- simpler but doesn't preserve cursor position
+    - "replace" -- Simpler but doesn't preserve cursor position.
 
-    * "diff":    -- more complicated but better at preserving cursor position
+    - "diff"    -- More complicated but better at preserving cursor position.
   */
   "merge_type": "replace",
 
   /*
   Subprocess timeout in seconds. If execution takes longer, Fmt kills the
-  subprocess and aborts with an error. (Technically, Fmt always kills the
-  subprocess just in case.)
+  subprocess and aborts with an error.
   */
   "timeout": 60,
 }
