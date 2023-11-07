@@ -169,7 +169,7 @@ def report(view, msg):
 
     if style == 'panel':
         msg = '[{}] {}'.format(PLUGIN_NAME, msg)
-        ensure_panel(window).run_command('fmt_panel_replace_content', {'text': msg.replace('\r\n', '\n')})
+        ensure_panel(window).run_command('fmt_panel_replace_content', {'text': norm_newlines(msg)})
         show_panel(window)
         return
 
@@ -327,3 +327,6 @@ def get_env(view, scope):
     env = os.environ.copy()
     env.update(val)
     return env
+
+def norm_newlines(src):
+    return src.replace('\r\n', '\n')
