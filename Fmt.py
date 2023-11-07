@@ -52,8 +52,12 @@ def fmt_region(view, edit, region):
 
     hide_panel(view.window())
 
+    source = view.substr(region)
     scope = view.scope_name(region.begin())
-    fmted = fmt(view, view.substr(region), view_encoding(view), scope)
+    fmted = fmt(view, source, view_encoding(view), scope)
+    if fmted == source:
+        return
+
     merge_type = get_setting(view, 'merge_type', scope)
 
     if merge_type == 'diff':
